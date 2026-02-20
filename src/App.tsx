@@ -607,7 +607,7 @@ function GameUI() {
       }
 
       {/* Contextual Info Tips */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 max-w-lg text-center pointer-events-none z-10 transition-all duration-500">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-lg text-center pointer-events-none z-10 transition-all duration-500">
         {scaleLevel === 'molecular' && (
           <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
             <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold whitespace-nowrap">
