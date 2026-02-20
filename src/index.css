@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  background-color: #000000;
+  overflow: hidden;
+  /* Prevent scrollbars */
+}
+
+@theme {
+  --color-quantum-black: #000000;
+  --color-neon-blue: #00f3ff;
+  --color-neon-purple: #bc13fe;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
