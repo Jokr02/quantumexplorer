@@ -219,6 +219,22 @@ export const MOLECULE_PRESETS: Record<string, MoleculePreset> = {
         description: 'A highly highly malleable transition metal. In its solid form, it creates a Face-Centered Cubic (FCC) crystal lattice held together by strong metallic bonds.',
         atoms: [], // Populated dynamically by CrystalLattice
         bonds: []
+    },
+    penicillin: {
+        id: 'penicillin',
+        name: 'Penicillin G',
+        formula: 'C₁₆H₁₈N₂O₄S',
+        description: 'A revolutionary antibiotic. Features a highly strained beta-lactam ring fused to a thiazolidine ring, allowing it to inhibit bacterial cell wall synthesis.',
+        atoms: [], // Populated dynamically
+        bonds: []
+    },
+    dna_segment: {
+        id: 'dna_segment',
+        name: 'DNA Double Helix',
+        formula: 'Macromolecule',
+        description: 'A segment of Deoxyribonucleic Acid (DNA). Features a twin sugar-phosphate backbone connected by hydrogen-bonded nucleotide bases (A-T, C-G).',
+        atoms: [], // Populated procedurally
+        bonds: []
     }
 };
 
@@ -226,6 +242,8 @@ export const getMoleculeForElement = (symbol: string, activeId?: string | null):
     if (symbol === 'H' || symbol === 'O') return MOLECULE_PRESETS.water;
     if (symbol === 'Na' || symbol === 'Cl') return MOLECULE_PRESETS.nacl;
     if (symbol === 'Au') return MOLECULE_PRESETS.gold;
+    if (symbol === 'S') return MOLECULE_PRESETS.penicillin;
+    if (symbol === 'P') return MOLECULE_PRESETS.dna_segment;
     if (symbol === 'C') {
         // Handle multiple complex Carbon allotropes/molecules
         if (activeId === 'graphite') return MOLECULE_PRESETS.graphite;
