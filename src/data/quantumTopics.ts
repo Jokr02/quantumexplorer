@@ -412,7 +412,10 @@ export const QUANTUM_TOPICS: QuantumTopic[] = [
             { label: 'Fusion (pp-chain net)', latex: '4^1_1H \\to ^4_2He + 2e^+ + 2\\nu_e + 26.7 \\text{ MeV}' },
             { label: 'Lawson Criterion', latex: 'n T \\tau_E > 3 \\times 10^{21} \\text{ keV s m}^{-3}' }
         ],
-        funFact: 'The energy released by fusing just 1 kg of deuterium (extractable from 30 liters of seawater) equals the energy from burning 10,000 tons of coal!'
+        funFact: 'The energy released by fusing just 1 kg of deuterium (extractable from 30 liters of seawater) equals the energy from burning 10,000 tons of coal!',
+        exhibits: [
+            { label: 'Simulate Stellar Core (Iron Gas)', actionType: 'set_material', payload: { elementRef: 'Fe', material: 'gas' } }
+        ]
     },
     {
         id: 'quantum-entanglement',
@@ -520,40 +523,5 @@ export const QUANTUM_TOPICS: QuantumTopic[] = [
             { label: 'Superposition State', latex: '|\\psi\\rangle = \\frac{1}{\\sqrt{2}} |\\text{Alive}\\rangle + \\frac{1}{\\sqrt{2}} |\\text{Dead}\\rangle' }
         ],
         funFact: 'Schrödinger didn\'t propose the cat experiment to support quantum mechanics — he proposed it to show how absurd the theory seemed when scaled up to everyday life!'
-    },
-    {
-        id: 'quantum-entanglement',
-        title: 'Quantum Entanglement',
-        category: 'Quantum',
-        description: 'When particles interact, their quantum states can become inextricably linked, no matter how far apart they are.',
-        details: [
-            'Entanglement occurs when a pair of particles are generated or interact in ways such that the quantum state of each particle cannot be described independently of the state of the other.',
-            'If you have two entangled electrons and you measure the spin of one to be "Up", you instantly know that the other electron is "Down"—even if it is on the other side of the universe.',
-            'Albert Einstein famously called this "spooky action at a distance" because it implies information travels faster than the speed of light, violating Relativity. However, it cannot be used to transmit actual information faster than light.',
-            'Entanglement is the core principle behind quantum computing, quantum cryptography, and quantum teleportation.'
-        ],
-        formulas: [
-            { label: 'Bell State (Maximally Entangled)', latex: '|\\Phi^+\\rangle = \\frac{1}{\\sqrt{2}} (|00\\rangle + |11\\rangle)' }
-        ],
-        funFact: 'The 2022 Nobel Prize in Physics was awarded to Alain Aspect, John Clauser, and Anton Zeilinger for proving that quantum entanglement is real and not a hidden variable illusion.'
-    },
-    {
-        id: 'fusion-vs-fission',
-        title: 'Nuclear Fusion vs Fission',
-        category: 'Nuclear',
-        description: 'The two mechanisms by which the universe derives energy from atomic nuclei.',
-        details: [
-            'Nuclear Fission involves splitting a heavy, unstable nucleus (like Uranium-235) into lighter elements. This is how all current nuclear power plants and atomic bombs work. It creates radioactive waste but is manageable on Earth.',
-            'Nuclear Fusion is the exact opposite: combining extremely light nuclei (like Hydrogen isotopes Deuterium and Tritium) to form a heavier element (Helium). This releases vast amounts of energy, powers the Sun, and produces virtually no radioactive waste.',
-            'To achieve fusion, nuclei must overcome the immense electrostatic repulsion pushing them apart. This requires stellar temperatures (millions of degrees) and massive pressure to physically smash them together.',
-            'Iron (Fe) is the absolute turning point. Fusing elements lighter than Iron releases energy. Fissioning elements heavier than Iron releases energy. Iron itself is the ashes of the universe — it yields nothing.'
-        ],
-        formulas: [
-            { label: 'D-T Fusion Reaction', latex: '^2_1\\text{H} + ^3_1\\text{H} \\rightarrow ^4_2\\text{He} + ^1_0\\text{n} + 17.6 \\text{ MeV}' }
-        ],
-        funFact: 'The temperature inside an experimental fusion reactor like ITER is 150 million degrees Celsius — ten times hotter than the core of our Sun!',
-        exhibits: [
-            { label: 'Simulate Stellar Core (Iron Gas)', actionType: 'set_material', payload: { elementRef: 'Fe', material: 'gas' } }
-        ]
     }
 ];
