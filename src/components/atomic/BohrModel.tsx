@@ -4,6 +4,15 @@ import { Text, Torus, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 import { calculateElectronShells } from '../../utils/atomic';
+import { seededRandom } from '../../utils/random';
+
+interface JumpingPhotonState {
+    active: boolean;
+    isEmission: boolean;
+    startPos: THREE.Vector3;
+    startTime: number;
+    color: string;
+}
 
 const SHELL_NAMES = ['K', 'L', 'M', 'N', 'O', 'P', 'Q'];
 const ORBITAL_TYPES = ['1s', '2s,2p', '3s,3p', '3d,4s', '4p,4d', '4f,5s,5p', '5d,6s'];
@@ -52,9 +61,10 @@ function OrbitRing({ radius, shellIndex, electronCount }: { radius: number, shel
     );
 }
 
-function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, setJumpingPhoton, elementColor }: { radius: number, speed: number, offset: number, showLabel: boolean, shellIndex: number, maxShells: number, setJumpingPhoton: (p: any) => void, elementColor: string }) {
+function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, setJumpingPhoton, elementColor }: { radius: number, speed: number, offset: number, showLabel: boolean, shellIndex: number, maxShells: number, setJumpingPhoton: (p: JumpingPhotonState) => void, elementColor: string }) {
     const ref = useRef<THREE.Group>(null);
     const trailRef = useRef<THREE.Mesh>(null);
+    const labelRef = useRef<THREE.Group>(null);
     const prevPos = useRef(new THREE.Vector3());
 
     // Jump state
@@ -65,7 +75,7 @@ function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, set
         targetRadius: radius,
         startShell: shellIndex,
         targetShell: shellIndex,
-        nextJumpTime: Math.random() * 10 + 5 // Random initial wait 5-15s
+        nextJumpTime: seededRandom(offset * 12.9898 + shellIndex * 78.233) * 10 + 5 // Random initial wait 5-15s
     });
 
     useFrame((state) => {
@@ -144,6 +154,10 @@ function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, set
         }
 
         prevPos.current.copy(ref.current.position);
+
+        if (labelRef.current) {
+            labelRef.current.visible = showLabel && !jumpState.current.isJumping;
+        }
     });
 
     return (
@@ -174,8 +188,8 @@ function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, set
                     </mesh>
                 </Billboard>
 
-                {showLabel && !jumpState.current.isJumping && (
-                    <Billboard position={[0, 0.55, 0]}>
+                {showLabel && (
+                    <Billboard ref={labelRef} position={[0, 0.55, 0]}>
                         <Text fontSize={0.25} color="#00ffff" outlineWidth={0.015} outlineColor="#003344" letterSpacing={0.1}>
                             e-
                         </Text>
@@ -187,7 +201,7 @@ function Electron({ radius, speed, offset, showLabel, shellIndex, maxShells, set
 }
 
 // Visual Photon Particle
-function PhotonWave({ active, isEmission, startPos, startTime, color }: any) {
+function PhotonWave({ active, isEmission, startPos, startTime, color }: JumpingPhotonState) {
     const ref = useRef<THREE.Group>(null);
 
     useFrame((state) => {
@@ -210,7 +224,7 @@ function PhotonWave({ active, isEmission, startPos, startTime, color }: any) {
         const outerOrbitDistance = 25.0; // Far away relative to atom
         const escapeDir = startPos.clone().normalize();
 
-        let currentPos = new THREE.Vector3();
+        const currentPos = new THREE.Vector3();
         if (isEmission) {
             // Fly Out
             const targetPos = startPos.clone().add(escapeDir.multiplyScalar(outerOrbitDistance));

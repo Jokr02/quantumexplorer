@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/purity */
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -107,9 +106,9 @@ function generateDOrbital(n: number, count: number, radius: number, variant: num
         const phi = Math.random() * Math.PI;
         const rDist = r * (0.3 + Math.random() * 0.6);
 
-        let x = rDist * Math.sin(phi) * Math.cos(theta);
-        let y = rDist * Math.sin(phi) * Math.sin(theta);
-        let z = rDist * Math.cos(phi);
+        const x = rDist * Math.sin(phi) * Math.cos(theta);
+        const y = rDist * Math.sin(phi) * Math.sin(theta);
+        const z = rDist * Math.cos(phi);
 
         // d orbital shape modulation (cloverleaf)
         let angularFactor = 0;

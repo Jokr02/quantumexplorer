@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { useGameStore, useGameActions } from '../../store/useGameStore';
 import { useAudio } from '../../hooks/useAudio';
 import { ELEMENTS } from '../../data/elements';
+import { seededRandom } from '../../utils/random';
+
+type DecayType = 'alpha' | 'beta-';
 
 // Vertex Shader for individual Nucleons (Morphing/Displacement)
 const nucleonVertexShader = `
@@ -118,6 +121,7 @@ export function Nucleus() {
     const groupRef = useRef<THREE.Group>(null);
     const baseMatricesRef = useRef<THREE.Matrix4[]>([]);
     const collisionTimeRef = useRef<number | null>(null);
+    const decayStateRef = useRef<{ decayType: DecayType; decayIndices: number[] } | null>(null);
 
     // Watch for collision triggers
     useEffect(() => {
@@ -139,7 +143,7 @@ export function Nucleus() {
 
         // Fisher-Yates shuffle for the types array
         for (let i = types.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(seededRandom(i * 12.9898 + total * 78.233) * (i + 1));
             [types[i], types[j]] = [types[j], types[i]];
         }
 
@@ -152,7 +156,7 @@ export function Nucleus() {
             const radius = 0.5 * Math.pow(total, 1 / 3);
 
             // Jitter for natural look
-            const r = radius * 0.8 + (Math.random() * 0.2);
+            const r = radius * 0.8 + (seededRandom(i * 43.114) * 0.2);
 
             const x = r * Math.sin(phi) * Math.cos(theta);
             const y = r * Math.sin(phi) * Math.sin(theta);
@@ -220,7 +224,7 @@ export function Nucleus() {
                     const neutrons = selectedElement.neutrons;
                     const nzRatio = protons > 0 ? neutrons / protons : 0;
 
-                    let decayType = 'alpha';
+                    let decayType: DecayType = 'alpha';
                     if (protons <= 82 && nzRatio > 1.4) {
                         decayType = 'beta-';
                     } else if (protons > 82) {
@@ -230,12 +234,12 @@ export function Nucleus() {
                         decayType = 'alpha';
                     }
 
-                    (meshRef.current as any).decayType = decayType;
+                    let decayIndices: number[];
 
                     if (decayType === 'alpha') {
                         // Identify the 'Alpha Particle' (2 protons, 2 neutrons) to eject
                         let pCount = 0, nCount = 0;
-                        const decayIndices: number[] = [];
+                        decayIndices = [];
                         for (let i = 0; i < nucleonData.length; i++) {
                             if (nucleonData[i].type === 'proton' && pCount < 2) {
                                 decayIndices.push(i);
@@ -246,8 +250,7 @@ export function Nucleus() {
                             }
                             if (pCount === 2 && nCount === 2) break;
                         }
-                        (meshRef.current as any).decayIndices = decayIndices;
-                    } else if (decayType === 'beta-') {
+                    } else {
                         // Identify one neutron to turn into a proton and eject an electron
                         let nIndex = -1;
                         for (let i = 0; i < nucleonData.length; i++) {
@@ -256,13 +259,15 @@ export function Nucleus() {
                                 break;
                             }
                         }
-                        (meshRef.current as any).decayIndices = [nIndex];
+                        decayIndices = [nIndex];
                     }
+
+                    decayStateRef.current = { decayType, decayIndices };
                 }
 
                 const t = state.clock.getElapsedTime() - collisionTimeRef.current;
                 const duration = 2.0;
-                const decayType = (meshRef.current as any).decayType;
+                const decayType = decayStateRef.current!.decayType;
 
                 if (t > duration) {
                     // Decay finished, mutate the element
@@ -276,12 +281,12 @@ export function Nucleus() {
                         const newN = selectedElement.neutrons - 2;
 
                         if (newZ >= 1) {
-                            const newElementData = Object.values(ELEMENTS).find((e: any) => e.atomicNumber === newZ);
+                            const newElementData = Object.values(ELEMENTS).find((e) => e.atomicNumber === newZ);
                             if (newElementData) {
                                 setSelectedElement({
                                     ...newElementData,
                                     neutrons: Math.max(0, newN)
-                                } as any);
+                                });
                                 playSound('zoom_in', { volume: 0.5 });
                             }
                         }
@@ -290,19 +295,19 @@ export function Nucleus() {
                         const newZ = selectedElement.atomicNumber + 1;
                         const newN = selectedElement.neutrons - 1;
 
-                        const newElementData = Object.values(ELEMENTS).find((e: any) => e.atomicNumber === newZ);
+                        const newElementData = Object.values(ELEMENTS).find((e) => e.atomicNumber === newZ);
                         if (newElementData) {
                             setSelectedElement({
                                 ...newElementData,
                                 neutrons: Math.max(0, newN)
-                            } as any);
+                            });
                             playSound('zoom_in', { volume: 0.5 });
                         }
                     }
 
                 } else {
                     // Animate the decay
-                    const decayIndices = (meshRef.current as any).decayIndices as number[];
+                    const decayIndices = decayStateRef.current!.decayIndices;
                     if (decayIndices && decayIndices.length > 0) {
                         const dummy = new THREE.Object3D();
                         const scratchVec = new THREE.Vector3();

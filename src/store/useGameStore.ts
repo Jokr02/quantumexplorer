@@ -8,6 +8,8 @@ export type MaterialType = 'solid' | 'liquid' | 'gas';
 
 export type AtomicViewMode = 'bohr' | 'orbital';
 
+export type PeriodicTableColorMode = 'category' | 'electronegativity' | 'atomicRadius' | 'ionizationEnergy';
+
 export interface InfoPopup {
     title: string;
     content: string[];
@@ -34,6 +36,9 @@ interface GameState {
     triggerThermalPulse: number;
     isDecaying: boolean;
     cinematicMode: boolean;
+    periodicTableColorMode: PeriodicTableColorMode;
+    showQuarks: boolean;
+    isMoleculeGalleryOpen: boolean;
 
     actions: {
         setScaleLevel: (level: ScaleLevel) => void;
@@ -57,6 +62,9 @@ interface GameState {
         fireThermalPulse: () => void;
         setDecaying: (decaying: boolean) => void;
         setCinematicMode: (enabled: boolean) => void;
+        setPeriodicTableColorMode: (mode: PeriodicTableColorMode) => void;
+        setShowQuarks: (show: boolean) => void;
+        setMoleculeGalleryOpen: (open: boolean) => void;
     };
 }
 
@@ -79,6 +87,9 @@ export const useGameStore = create<GameState>((set) => ({
     triggerThermalPulse: 0,
     isDecaying: false,
     cinematicMode: false,
+    periodicTableColorMode: 'category',
+    showQuarks: false,
+    isMoleculeGalleryOpen: false,
 
     actions: {
         setScaleLevel: (level) => set({ scaleLevel: level }),
@@ -117,6 +128,9 @@ export const useGameStore = create<GameState>((set) => ({
         fireThermalPulse: () => set((state) => ({ triggerThermalPulse: state.triggerThermalPulse + 1 })),
         setDecaying: (decaying) => set({ isDecaying: decaying }),
         setCinematicMode: (enabled) => set({ cinematicMode: enabled }),
+        setPeriodicTableColorMode: (mode) => set({ periodicTableColorMode: mode }),
+        setShowQuarks: (show) => set({ showQuarks: show }),
+        setMoleculeGalleryOpen: (open) => set({ isMoleculeGalleryOpen: open }),
     }
 }));
 

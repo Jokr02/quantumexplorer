@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 import { MOLECULE_PRESETS } from '../../data/molecules';
+import { seededRandom } from '../../utils/random';
 
 const hydrogenBondShader = {
     uniforms: {
@@ -48,18 +49,22 @@ export function WaterMolecule() {
 
     // Generate a small cluster of water molecules to show hydrogen bonding
     const cluster = useMemo(() => {
-        const molecules = [];
+        const molecules: { position: [number, number, number]; rotation: [number, number, number] }[] = [];
         const count = 5;
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2;
             const radius = 2.5;
             molecules.push({
                 position: [
-                    Math.cos(angle) * radius + (Math.random() - 0.5) * 0.5,
-                    Math.sin(angle) * radius + (Math.random() - 0.5) * 0.5,
-                    (Math.random() - 0.5) * 1.5
+                    Math.cos(angle) * radius + (seededRandom(i * 12.9898) - 0.5) * 0.5,
+                    Math.sin(angle) * radius + (seededRandom(i * 78.233) - 0.5) * 0.5,
+                    (seededRandom(i * 37.719) - 0.5) * 1.5
                 ],
-                rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]
+                rotation: [
+                    seededRandom(i * 93.989) * Math.PI,
+                    seededRandom(i * 15.73) * Math.PI,
+                    seededRandom(i * 51.91) * Math.PI
+                ]
             });
         }
         return molecules;
@@ -84,10 +89,10 @@ export function WaterMolecule() {
     return (
         <group ref={groupRef}>
             {cluster.map((mol, idx) => (
-                <group key={idx} position={mol.position as any} rotation={mol.rotation as any}>
+                <group key={idx} position={mol.position} rotation={mol.rotation}>
                     {/* Render atoms of each water molecule */}
                     {preset.atoms.map((atom, aIdx) => (
-                        <mesh key={aIdx} position={atom.position as any}>
+                        <mesh key={aIdx} position={atom.position}>
                             <sphereGeometry args={[atom.scale || 0.3, 32, 32]} />
                             <meshStandardMaterial
                                 color={atom.type === 'O' ? '#ff0d0d' : '#ffffff'}

@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
+import { seededRandom } from '../../utils/random';
 
 const dustVertexShader = `
 attribute float aSize;
@@ -53,11 +54,11 @@ export function AmbientDust() {
         const speeds = new Float32Array(count);
 
         for (let i = 0; i < count; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 30;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-            sizes[i] = Math.random() * 3 + 1;
-            speeds[i] = Math.random() * 0.5 + 0.3;
+            positions[i * 3] = (seededRandom(i * 12.9898) - 0.5) * 30;
+            positions[i * 3 + 1] = (seededRandom(i * 78.233) - 0.5) * 30;
+            positions[i * 3 + 2] = (seededRandom(i * 37.719) - 0.5) * 20;
+            sizes[i] = seededRandom(i * 93.989) * 3 + 1;
+            speeds[i] = seededRandom(i * 4.421) * 0.5 + 0.3;
         }
 
         return { positions, sizes, speeds };

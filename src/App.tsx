@@ -7,9 +7,11 @@ import { SceneManager } from './components/scene/SceneManager';
 import { useGameStore } from './store/useGameStore';
 import type { MaterialType } from './store/useGameStore';
 import { PeriodicTable } from './components/ui/PeriodicTable';
+import { MoleculeGallery } from './components/ui/MoleculeGallery';
 import { QuantumAcademy } from './components/ui/QuantumAcademy';
 import { InfoPopup } from './components/ui/InfoPopup';
 import { HoverTooltip } from './components/ui/HoverTooltip';
+import { FirstTimeTour } from './components/ui/FirstTimeTour';
 import { calculateElectronShells } from './utils/atomic';
 import { formatElectronConfig, EMISSION_SPECTRA, wavelengthToColor } from './utils/electronConfig';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -18,8 +20,8 @@ import { getMoleculeForElement } from './data/molecules';
 import { useAudio } from './hooks/useAudio';
 
 function GameUI() {
-  const { scaleLevel, currentScale, materialType, selectedElement, hoveredElement, temperature, electronsAnimated, atomicViewMode, showSpecialMolecule, activeMoleculeId } = useGameStore();
-  const { setTargetScale, setMaterialType, setTemperature, setElectronsAnimated, setAtomicViewMode, toggleSpecialMolecule: toggleSpecialMoleculeStore, setActiveMolecule } = useGameStore.getState().actions;
+  const { scaleLevel, currentScale, materialType, selectedElement, hoveredElement, temperature, electronsAnimated, atomicViewMode, showSpecialMolecule, activeMoleculeId, showQuarks } = useGameStore();
+  const { setTargetScale, setMaterialType, setTemperature, setElectronsAnimated, setAtomicViewMode, toggleSpecialMolecule: toggleSpecialMoleculeStore, setActiveMolecule, setShowQuarks } = useGameStore.getState().actions;
 
   const { playSound, stopSound } = useAudio();
   const prevScaleLevelRef = useRef(scaleLevel);
@@ -349,6 +351,27 @@ function GameUI() {
               </div>
             )}
 
+            {/* Periodic Trends */}
+            {(displayElement.electronegativity !== undefined || displayElement.atomicRadius !== undefined || displayElement.ionizationEnergy !== undefined) && (
+              <div className="mt-3 pt-2 border-t border-slate-100">
+                <div className="text-[10px] uppercase text-slate-400 font-bold mb-1">Periodic Trends</div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/5 p-1.5 rounded border border-white/5">
+                    <div className="text-[8px] uppercase tracking-widest text-slate-400 font-bold">Electroneg.</div>
+                    <div className="font-mono font-bold text-white">{displayElement.electronegativity ?? '—'}</div>
+                  </div>
+                  <div className="bg-white/5 p-1.5 rounded border border-white/5">
+                    <div className="text-[8px] uppercase tracking-widest text-slate-400 font-bold">Radius</div>
+                    <div className="font-mono font-bold text-white">{displayElement.atomicRadius ? `${displayElement.atomicRadius}pm` : '—'}</div>
+                  </div>
+                  <div className="bg-white/5 p-1.5 rounded border border-white/5">
+                    <div className="text-[8px] uppercase tracking-widest text-slate-400 font-bold">Ioniz. E.</div>
+                    <div className="font-mono font-bold text-white">{displayElement.ionizationEnergy ? `${displayElement.ionizationEnergy}` : '—'}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Extended Data */}
             {displayElement.discoveryYear && (
               <div className="mt-3 pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
@@ -379,6 +402,13 @@ function GameUI() {
       {
         scaleLevel === 'atomic' && (
           <PeriodicTable />
+        )
+      }
+
+      {/* Bottom Left: Molecule Gallery - Only visible in Molecular View */}
+      {
+        scaleLevel === 'molecular' && (
+          <MoleculeGallery />
         )
       }
 
@@ -564,6 +594,19 @@ function GameUI() {
                       +
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => {
+                      playSound('ui_click', { volume: 0.3 });
+                      setShowQuarks(!showQuarks);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-bold transition-all border text-[10px] uppercase tracking-widest w-full flex items-center justify-center gap-2 ${showQuarks
+                      ? 'bg-violet-500/30 text-violet-200 border-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                      : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
+                      }`}
+                  >
+                    <span>{showQuarks ? '🔬' : '⚛️'}</span> {showQuarks ? 'Hide Quarks' : 'Show Quarks (uud/udd)'}
+                  </button>
 
                   {!isStable && (
                     <button
@@ -819,6 +862,9 @@ function App() {
       <InfoPopup />
       <HoverTooltip />
 
+      {/* First-time onboarding tour */}
+      <FirstTimeTour />
+
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
@@ -868,7 +914,7 @@ function App() {
           <EffectComposer>
             <DepthOfField focusDistance={0.01} focalLength={0.05} bokehScale={2} height={480} />
             <SSAO samples={31} radius={0.2} intensity={20} luminanceInfluence={0.6} color={new THREE.Color(0x000000)} />
-            <ChromaticAberration offset={[0.002, 0.002] as any} />
+            <ChromaticAberration offset={new THREE.Vector2(0.002, 0.002)} />
             <Bloom
               luminanceThreshold={scaleLevel === 'subatomic' ? 0.6 : 1}
               intensity={bloomIntensity * 1.5}
