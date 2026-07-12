@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
-import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Noise, DepthOfField, SSAO, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { CameraController } from './components/scene/CameraController';
 import { SceneManager } from './components/scene/SceneManager';
@@ -13,7 +13,7 @@ import { HoverTooltip } from './components/ui/HoverTooltip';
 import { calculateElectronShells } from './utils/atomic';
 import { formatElectronConfig, EMISSION_SPECTRA, wavelengthToColor } from './utils/electronConfig';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { BookOpen, Keyboard, Camera } from 'lucide-react';
+import { BookOpen, Keyboard, Camera, Sparkles } from 'lucide-react';
 import { getMoleculeForElement } from './data/molecules';
 import { useAudio } from './hooks/useAudio';
 
@@ -609,24 +609,24 @@ function GameUI() {
       {/* Contextual Info Tips */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-lg text-center pointer-events-none z-10 transition-all duration-500">
         {scaleLevel === 'molecular' && (
-          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
-            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold whitespace-nowrap">
+          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
+            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold text-center">
               <span className="text-emerald-400 mr-2">🔬 Molecular</span>
               Switch states and <span className="text-orange-400">adjust temperature</span> to interact
             </p>
           </div>
         )}
         {scaleLevel === 'atomic' && (
-          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
-            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold whitespace-nowrap">
+          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
+            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold text-center">
               <span className="text-blue-400 mr-2">⚛️ Atomic</span>
               Pick elements from <span className="text-indigo-400">Periodic Table</span> &amp; toggle <span className="text-purple-400">View Modes</span>
             </p>
           </div>
         )}
         {scaleLevel === 'subatomic' && (
-          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
-            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold whitespace-nowrap">
+          <div className="bg-slate-900/60 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
+            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-bold text-center">
               <span className="text-rose-400 mr-2">🔴🔵 Subatomic</span>
               Modify neutrons to build <span className="text-emerald-400">Isotopes</span>. Ctrl+Click for physics insights
             </p>
@@ -641,6 +641,8 @@ function GameUI() {
 function App() {
   const scaleLevel = useGameStore((state) => state.scaleLevel);
   const currentScale = useGameStore((state) => state.currentScale);
+  const cinematicMode = useGameStore((state) => state.cinematicMode);
+  const setCinematicMode = useGameStore.getState().actions.setCinematicMode;
   const [showAcademy, setShowAcademy] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const { playSound } = useAudio();
@@ -741,6 +743,18 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* Cinematic Mode Button */}
+        <button
+          onClick={() => {
+            playSound('ui_click', { volume: 0.5 });
+            setCinematicMode(!cinematicMode);
+          }}
+          className={`ui-layer h-10 w-12 flex items-center justify-center backdrop-blur-md rounded-xl shadow-lg transition-all duration-200 border group ${cinematicMode ? 'bg-amber-500/80 hover:bg-amber-400 border-amber-300 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-slate-800/80 hover:bg-slate-700 border-white/10 text-slate-200 hover:text-white'}`}
+          title={cinematicMode ? "Disable Cinematic Mode" : "Enable Cinematic Mode"}
+        >
+          <Sparkles className={`w-4 h-4 transition-all ${cinematicMode ? 'scale-110 text-white' : 'group-hover:scale-110 group-hover:text-amber-300'}`} />
+        </button>
 
         {/* Photo Mode Button */}
         <button
@@ -850,15 +864,30 @@ function App() {
         )}
 
         {/* Cinematic Post Processing */}
-        <EffectComposer>
-          <Bloom
-            luminanceThreshold={scaleLevel === 'subatomic' ? 0.6 : 1}
-            intensity={bloomIntensity}
-            levels={9}
-            mipmapBlur
-          />
-          <Noise opacity={0.025} />
-        </EffectComposer>
+        {cinematicMode ? (
+          <EffectComposer>
+            <DepthOfField focusDistance={0.01} focalLength={0.05} bokehScale={2} height={480} />
+            <SSAO samples={31} radius={0.2} intensity={20} luminanceInfluence={0.6} color={new THREE.Color(0x000000)} />
+            <ChromaticAberration offset={[0.002, 0.002] as any} />
+            <Bloom
+              luminanceThreshold={scaleLevel === 'subatomic' ? 0.6 : 1}
+              intensity={bloomIntensity * 1.5}
+              levels={9}
+              mipmapBlur
+            />
+            <Noise opacity={0.025} />
+          </EffectComposer>
+        ) : (
+          <EffectComposer>
+            <Bloom
+              luminanceThreshold={scaleLevel === 'subatomic' ? 0.6 : 1}
+              intensity={bloomIntensity}
+              levels={9}
+              mipmapBlur
+            />
+            <Noise opacity={0.025} />
+          </EffectComposer>
+        )}
       </Canvas>
     </div>
   );

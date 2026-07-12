@@ -33,6 +33,7 @@ interface GameState {
     triggerCollision: number;
     triggerThermalPulse: number;
     isDecaying: boolean;
+    cinematicMode: boolean;
 
     actions: {
         setScaleLevel: (level: ScaleLevel) => void;
@@ -55,6 +56,7 @@ interface GameState {
         fireCollision: () => void;
         fireThermalPulse: () => void;
         setDecaying: (decaying: boolean) => void;
+        setCinematicMode: (enabled: boolean) => void;
     };
 }
 
@@ -76,6 +78,7 @@ export const useGameStore = create<GameState>((set) => ({
     triggerCollision: 0,
     triggerThermalPulse: 0,
     isDecaying: false,
+    cinematicMode: false,
 
     actions: {
         setScaleLevel: (level) => set({ scaleLevel: level }),
@@ -113,6 +116,7 @@ export const useGameStore = create<GameState>((set) => ({
         fireCollision: () => set((state) => ({ triggerCollision: state.triggerCollision + 1 })),
         fireThermalPulse: () => set((state) => ({ triggerThermalPulse: state.triggerThermalPulse + 1 })),
         setDecaying: (decaying) => set({ isDecaying: decaying }),
+        setCinematicMode: (enabled) => set({ cinematicMode: enabled }),
     }
 }));
 
