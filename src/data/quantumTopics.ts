@@ -417,7 +417,10 @@ export const QUANTUM_TOPICS: QuantumTopic[] = [
             { label: 'Fusion (pp-chain net)', latex: '4^1_1H \\to ^4_2He + 2e^+ + 2\\nu_e + 26.7 \\text{ MeV}' },
             { label: 'Lawson Criterion', latex: 'n T \\tau_E > 3 \\times 10^{21} \\text{ keV s m}^{-3}' }
         ],
-        funFact: 'The energy released by fusing just 1 kg of deuterium (extractable from 30 liters of seawater) equals the energy from burning 10,000 tons of coal!'
+        funFact: 'The energy released by fusing just 1 kg of deuterium (extractable from 30 liters of seawater) equals the energy from burning 10,000 tons of coal!',
+        exhibits: [
+            { label: 'Simulate Stellar Core (Iron Gas)', actionType: 'set_material', payload: { elementRef: 'Fe', material: 'gas' } }
+        ]
     },
     {
         id: 'quantum-entanglement',
@@ -509,6 +512,22 @@ export const QUANTUM_TOPICS: QuantumTopic[] = [
             { label: 'De Broglie Wavelength', latex: '\\lambda = \\frac{h}{p}' }
         ],
         funFact: 'Richard Feynman said that the double-slit experiment contains the ONLY mystery of quantum mechanics.'
+    },
+    {
+        id: 'schrodingers-cat',
+        title: 'Schrödinger\'s Cat',
+        category: 'Quantum',
+        description: 'A famous thought experiment illustrating the paradox of quantum superposition applied to everyday objects.',
+        details: [
+            'Erwin Schrödinger proposed this in 1935 to highlight how bizarre quantum mechanics is. A cat is placed in a sealed steel box with a radioactive atom, a Geiger counter, and a vial of poison gas.',
+            'If the atom decays, the counter triggers a hammer that smashes the vial, killing the cat. If it doesn\'t decay, the cat lives.',
+            'According to quantum mechanics, until the box is opened and an observation is made, the radioactive atom exists in a "superposition" — it is simultaneously decayed AND not decayed.',
+            'Therefore, the entire system is in superposition. The cat is both dead AND alive at the same time until the box is opened! The act of looking forces reality to pick one state.'
+        ],
+        formulas: [
+            { label: 'Superposition State', latex: '|\\psi\\rangle = \\frac{1}{\\sqrt{2}} |\\text{Alive}\\rangle + \\frac{1}{\\sqrt{2}} |\\text{Dead}\\rangle' }
+        ],
+        funFact: 'Schrödinger didn\'t propose the cat experiment to support quantum mechanics — he proposed it to show how absurd the theory seemed when scaled up to everyday life!'
     }
 ];
 

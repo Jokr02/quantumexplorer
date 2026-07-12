@@ -17,6 +17,8 @@ import { NaClLattice } from '../molecular/NaClLattice';
 import { DiamondLattice } from '../molecular/DiamondLattice';
 import { GraphiteLattice } from '../molecular/GraphiteLattice';
 import { ComplexMolecule } from '../molecular/ComplexMolecule';
+import { ProceduralDNA } from '../molecular/ProceduralDNA';
+import { ProceduralPenicillin } from '../molecular/ProceduralPenicillin';
 import { getMoleculeForElement } from '../../data/molecules';
 import { toSceneSafeText } from '../../utils/text';
 import { Text } from '@react-three/drei';
@@ -140,6 +142,8 @@ export function SceneManager() {
             case 'diamond': return <DiamondLattice />;
             case 'graphite': return <GraphiteLattice />;
             case 'gold': return <CrystalLattice />;
+            case 'dna_segment': return <ProceduralDNA preset={specialMolecule} />;
+            case 'penicillin': return <ProceduralPenicillin preset={specialMolecule} />;
             case 'caffeine':
             case 'buckyball':
             case 'methane':
