@@ -1,11 +1,87 @@
-import React, { useState } from 'react';
-import { QUANTUM_TOPICS } from '../../data/quantumTopics';
+import React, { useState, useEffect, useCallback } from 'react';
+import { QUANTUM_TOPICS, QUIZ_BANK } from '../../data/quantumTopics';
 import type { QuantumTopic } from '../../data/quantumTopics';
 import { useGameStore } from '../../store/useGameStore';
 import { ELEMENTS } from '../../data/elements';
-import { X, BookOpen, Atom, FlaskConical, Zap, Radiation, ChevronRight, Info, Orbit } from 'lucide-react';
+import { X, BookOpen, Atom, FlaskConical, Zap, Radiation, ChevronRight, Info, Orbit, HelpCircle, CheckCircle2 } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
+
+const MASTERED_TOPICS_KEY = 'quantum-academy-mastered-topics';
+
+function loadMasteredTopics(): Set<string> {
+    try {
+        const raw = localStorage.getItem(MASTERED_TOPICS_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+        return new Set();
+    }
+}
+
+function TopicQuiz({ topicId, onMastered }: { topicId: string; onMastered: (id: string) => void }) {
+    const questions = QUIZ_BANK[topicId] ?? [];
+    const [answers, setAnswers] = useState<(number | null)[]>(() => questions.map(() => null));
+
+    const allAnswered = questions.length > 0 && answers.every((a) => a !== null);
+    const allCorrect = allAnswered && answers.every((a, i) => a === questions[i].correctIndex);
+
+    useEffect(() => {
+        if (allCorrect) onMastered(topicId);
+    }, [allCorrect, onMastered, topicId]);
+
+    if (questions.length === 0) return null;
+
+    const selectAnswer = (qIdx: number, optIdx: number) => {
+        if (answers[qIdx] !== null) return;
+        setAnswers((prev) => prev.map((a, i) => (i === qIdx ? optIdx : a)));
+    };
+
+    return (
+        <div className="mt-12 space-y-4">
+            <h3 className="text-xs font-bold text-amber-400 uppercase tracking-[0.2em] mb-4 flex items-center justify-between">
+                <span className="flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Test Yourself</span>
+                {allCorrect && <span className="text-emerald-400 normal-case tracking-normal flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Mastered</span>}
+            </h3>
+            <div className="space-y-5">
+                {questions.map((q, qIdx) => {
+                    const picked = answers[qIdx];
+                    return (
+                        <div key={qIdx} className="p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+                            <p className="text-white font-medium mb-3">{qIdx + 1}. {q.question}</p>
+                            <div className="grid gap-2">
+                                {q.options.map((opt, optIdx) => {
+                                    const isCorrect = optIdx === q.correctIndex;
+                                    const isPicked = picked === optIdx;
+                                    let style = 'border-white/10 text-gray-300 hover:border-amber-400/40 hover:bg-white/5';
+                                    if (picked !== null) {
+                                        if (isCorrect) style = 'border-emerald-500/50 bg-emerald-500/10 text-emerald-200';
+                                        else if (isPicked) style = 'border-rose-500/50 bg-rose-500/10 text-rose-200';
+                                        else style = 'border-white/5 text-gray-500';
+                                    }
+                                    return (
+                                        <button
+                                            key={optIdx}
+                                            onClick={() => selectAnswer(qIdx, optIdx)}
+                                            disabled={picked !== null}
+                                            className={`text-left px-4 py-2 rounded-lg border transition-all text-sm cursor-pointer disabled:cursor-default ${style}`}
+                                        >
+                                            {opt}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {picked !== null && (
+                                <p className={`mt-3 text-sm ${picked === q.correctIndex ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {picked === q.correctIndex ? '✓ Correct — ' : '✗ Not quite — '}{q.explanation}
+                                </p>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 interface QuantumAcademyProps {
     onClose: () => void;
@@ -35,8 +111,23 @@ export const QuantumAcademy: React.FC<QuantumAcademyProps> = ({ onClose, startCa
         : QUANTUM_TOPICS[0];
 
     const [selectedTopicId, setSelectedTopicId] = useState<string>(initialTopic?.id || QUANTUM_TOPICS[0].id);
+    const [masteredTopics, setMasteredTopics] = useState<Set<string>>(() => loadMasteredTopics());
 
     const selectedTopic: QuantumTopic = QUANTUM_TOPICS.find(t => t.id === selectedTopicId) || QUANTUM_TOPICS[0];
+
+    const markMastered = useCallback((id: string) => {
+        setMasteredTopics((prev) => {
+            if (prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.add(id);
+            try {
+                localStorage.setItem(MASTERED_TOPICS_KEY, JSON.stringify([...next]));
+            } catch {
+                // localStorage unavailable (e.g. private browsing) — progress just won't persist
+            }
+            return next;
+        });
+    }, []);
 
     const getIcon = (category: string) => {
         switch (category) {
@@ -98,8 +189,9 @@ export const QuantumAcademy: React.FC<QuantumAcademyProps> = ({ onClose, startCa
                                             <div className={`${selectedTopicId === topic.id ? 'text-indigo-400' : 'text-gray-500 group-hover:text-indigo-400'} transition-colors`}>
                                                 {getIcon(topic.category)}
                                             </div>
-                                            <span className="font-medium text-xs tracking-wide truncate text-left">{topic.title}</span>
-                                            {selectedTopicId === topic.id && <ChevronRight className="w-3 h-3 ml-auto shrink-0" />}
+                                            <span className="font-medium text-xs tracking-wide truncate text-left flex-1">{topic.title}</span>
+                                            {masteredTopics.has(topic.id) && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+                                            {selectedTopicId === topic.id && <ChevronRight className="w-3 h-3 ml-1 shrink-0" />}
                                         </button>
                                     ))}
                                 </div>
@@ -108,7 +200,16 @@ export const QuantumAcademy: React.FC<QuantumAcademyProps> = ({ onClose, startCa
                     </div>
 
                     <div className="p-4 bg-black/30 border-t border-white/5">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] text-center">Quantum Explorer v1.0</p>
+                        <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase tracking-[0.15em] mb-1.5">
+                            <span>Mastery Progress</span>
+                            <span className="text-emerald-400 font-bold">{masteredTopics.size}/{QUANTUM_TOPICS.length}</span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                                className="h-full bg-emerald-500 transition-all duration-500"
+                                style={{ width: `${(masteredTopics.size / QUANTUM_TOPICS.length) * 100}%` }}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -202,9 +303,9 @@ export const QuantumAcademy: React.FC<QuantumAcademyProps> = ({ onClose, startCa
                                                         actions.setShowSpecialMolecule(false);
                                                         actions.setActiveMolecule(null);
                                                         actions.setMaterialType(exhibit.payload.material);
-                                                        const elData = Object.values(ELEMENTS).find((e: any) => e.symbol === exhibit.payload.elementRef);
+                                                        const elData = Object.values(ELEMENTS).find((e) => e.symbol === exhibit.payload.elementRef);
                                                         if (elData) {
-                                                            actions.setSelectedElement(elData as any);
+                                                            actions.setSelectedElement(elData);
                                                         }
                                                     }
                                                     onClose();
@@ -219,6 +320,8 @@ export const QuantumAcademy: React.FC<QuantumAcademyProps> = ({ onClose, startCa
                                     </div>
                                 </div>
                             )}
+
+                            <TopicQuiz topicId={selectedTopic.id} onMastered={markMastered} />
                         </div>
                     </div>
                 </div>

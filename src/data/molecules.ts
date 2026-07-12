@@ -219,19 +219,115 @@ export const MOLECULE_PRESETS: Record<string, MoleculePreset> = {
         description: 'A highly highly malleable transition metal. In its solid form, it creates a Face-Centered Cubic (FCC) crystal lattice held together by strong metallic bonds.',
         atoms: [], // Populated dynamically by CrystalLattice
         bonds: []
-    }
+    },
+    penicillin: {
+        id: 'penicillin',
+        name: 'Penicillin G',
+        formula: 'C₁₆H₁₈N₂O₄S',
+        description: 'A revolutionary antibiotic. Features a highly strained beta-lactam ring fused to a thiazolidine ring, allowing it to inhibit bacterial cell wall synthesis.',
+        atoms: [], // Populated dynamically
+        bonds: []
+    },
+    dna_segment: {
+        id: 'dna_segment',
+        name: 'DNA Double Helix',
+        formula: 'Macromolecule',
+        description: 'A segment of Deoxyribonucleic Acid (DNA). Features a twin sugar-phosphate backbone connected by hydrogen-bonded nucleotide bases (A-T, C-G).',
+        atoms: [], // Populated procedurally
+        bonds: []
+    },
+    methane: {
+        id: 'methane',
+        name: 'Methane',
+        formula: 'CH₄',
+        description: 'The simplest hydrocarbon and main component of natural gas. A perfect example of tetrahedral molecular geometry (109.5° bond angles).',
+        // Carbon at center, 4 hydrogens at tetrahedron vertices (C-H bond length 1.09 Å)
+        atoms: [
+            { position: [0, 0, 0], type: 'C', scale: 0.4 },
+            { position: [0.629, 0.629, 0.629], type: 'H', scale: 0.3 },
+            { position: [0.629, -0.629, -0.629], type: 'H', scale: 0.3 },
+            { position: [-0.629, 0.629, -0.629], type: 'H', scale: 0.3 },
+            { position: [-0.629, -0.629, 0.629], type: 'H', scale: 0.3 },
+        ],
+        bonds: [
+            { start: [0, 0, 0], end: [0.629, 0.629, 0.629], type: 'covalent' },
+            { start: [0, 0, 0], end: [0.629, -0.629, -0.629], type: 'covalent' },
+            { start: [0, 0, 0], end: [-0.629, 0.629, -0.629], type: 'covalent' },
+            { start: [0, 0, 0], end: [-0.629, -0.629, 0.629], type: 'covalent' },
+        ]
+    },
+    ammonia: {
+        id: 'ammonia',
+        name: 'Ammonia',
+        formula: 'NH₃',
+        description: 'A pungent, colorless gas central to fertilizer production. Its trigonal pyramidal shape comes from a lone electron pair on nitrogen pushing the hydrogens together.',
+        // Nitrogen above a triangle of 3 hydrogens (N-H bond length 1.01 Å, H-N-H angle ~107°)
+        atoms: [
+            { position: [0, 0, 0], type: 'N', scale: 0.42 },
+            { position: [0.9375, 0, -0.3757], type: 'H', scale: 0.3 },
+            { position: [-0.4688, 0.8119, -0.3757], type: 'H', scale: 0.3 },
+            { position: [-0.4688, -0.8119, -0.3757], type: 'H', scale: 0.3 },
+        ],
+        bonds: [
+            { start: [0, 0, 0], end: [0.9375, 0, -0.3757], type: 'covalent' },
+            { start: [0, 0, 0], end: [-0.4688, 0.8119, -0.3757], type: 'covalent' },
+            { start: [0, 0, 0], end: [-0.4688, -0.8119, -0.3757], type: 'covalent' },
+        ]
+    },
+    carbon_dioxide: {
+        id: 'carbon_dioxide',
+        name: 'Carbon Dioxide',
+        formula: 'CO₂',
+        description: 'A linear molecule (180° bond angle) produced by respiration and combustion, and the primary greenhouse gas driving climate change.',
+        atoms: [
+            { position: [0, 0, 0], type: 'C', scale: 0.4 },
+            { position: [1.16, 0, 0], type: 'O', scale: 0.45 },
+            { position: [-1.16, 0, 0], type: 'O', scale: 0.45 },
+        ],
+        bonds: [
+            { start: [0, 0, 0], end: [1.16, 0, 0], type: 'covalent' },
+            { start: [0, 0, 0], end: [-1.16, 0, 0], type: 'covalent' },
+        ]
+    },
+    benzene: (() => {
+        const ringR = 1.39; // C-C aromatic bond length (Å)
+        const hR = 2.48; // C-H bond extends radially outward
+        const carbons: MoleculeAtom[] = [];
+        const hydrogens: MoleculeAtom[] = [];
+        const ringBonds: MoleculeBond[] = [];
+        const chBonds: MoleculeBond[] = [];
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            const cPos: [number, number, number] = [ringR * Math.cos(angle), ringR * Math.sin(angle), 0];
+            const hPos: [number, number, number] = [hR * Math.cos(angle), hR * Math.sin(angle), 0];
+            carbons.push({ position: cPos, type: 'C', scale: 0.4 });
+            hydrogens.push({ position: hPos, type: 'H', scale: 0.28 });
+            chBonds.push({ start: cPos, end: hPos, type: 'covalent' });
+        }
+        for (let i = 0; i < 6; i++) {
+            ringBonds.push({ start: carbons[i].position, end: carbons[(i + 1) % 6].position, type: 'covalent' });
+        }
+        return {
+            id: 'benzene',
+            name: 'Benzene',
+            formula: 'C₆H₆',
+            description: 'An aromatic ring of 6 carbons with delocalized electrons shared equally around the ring — the foundation of aromatic organic chemistry.',
+            atoms: [...carbons, ...hydrogens],
+            bonds: [...ringBonds, ...chBonds]
+        };
+    })(),
 };
 
 export const getMoleculeForElement = (symbol: string, activeId?: string | null): MoleculePreset | null => {
+    // An explicit pick (e.g. from the Molecule Gallery or Academy exhibits) always wins,
+    // regardless of which element happens to be selected.
+    if (activeId && MOLECULE_PRESETS[activeId]) return MOLECULE_PRESETS[activeId];
+
     if (symbol === 'H' || symbol === 'O') return MOLECULE_PRESETS.water;
     if (symbol === 'Na' || symbol === 'Cl') return MOLECULE_PRESETS.nacl;
     if (symbol === 'Au') return MOLECULE_PRESETS.gold;
-    if (symbol === 'C') {
-        // Handle multiple complex Carbon allotropes/molecules
-        if (activeId === 'graphite') return MOLECULE_PRESETS.graphite;
-        if (activeId === 'caffeine') return MOLECULE_PRESETS.caffeine;
-        if (activeId === 'buckyball') return MOLECULE_PRESETS.buckyball;
-        return MOLECULE_PRESETS.diamond; // Default
-    }
+    if (symbol === 'S') return MOLECULE_PRESETS.penicillin;
+    if (symbol === 'P') return MOLECULE_PRESETS.dna_segment;
+    if (symbol === 'C') return MOLECULE_PRESETS.diamond; // Default carbon allotrope
     return null;
 };

@@ -108,13 +108,13 @@ export function NaClLattice() {
     return (
         <group ref={groupRef}>
             {/* Sodium (Na+) - Smaller, purple/blue */}
-            <instancedMesh ref={meshNaRef} args={[null as any, null as any, naPositions.length]}>
+            <instancedMesh ref={meshNaRef} args={[undefined, undefined, naPositions.length]}>
                 <sphereGeometry args={[0.3, 16, 16]} />
                 <meshStandardMaterial color="#ab5cf2" metalness={0.5} roughness={0.2} emissive="#220044" emissiveIntensity={0.5} />
             </instancedMesh>
 
             {/* Chlorine (Cl-) - Larger, green */}
-            <instancedMesh ref={meshClRef} args={[null as any, null as any, clPositions.length]}>
+            <instancedMesh ref={meshClRef} args={[undefined, undefined, clPositions.length]}>
                 <sphereGeometry args={[0.45, 16, 16]} />
                 <meshStandardMaterial color="#1ff01f" metalness={0.5} roughness={0.2} emissive="#004400" emissiveIntensity={0.5} />
             </instancedMesh>

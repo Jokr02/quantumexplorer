@@ -1,6 +1,31 @@
+import { useMemo } from 'react';
 import { useGameStore } from '../../store/useGameStore';
+import type { PeriodicTableColorMode } from '../../store/useGameStore';
 import { ELEMENTS } from '../../data/elements';
+import type { ElementData } from '../../data/elements';
 import { useAudio } from '../../hooks/useAudio';
+
+const TREND_CONFIG: Record<Exclude<PeriodicTableColorMode, 'category'>, { label: string; unit: string; getValue: (e: ElementData) => number | undefined }> = {
+    electronegativity: { label: 'Electronegativity', unit: 'Pauling scale', getValue: (e) => e.electronegativity },
+    atomicRadius: { label: 'Atomic Radius', unit: 'pm', getValue: (e) => e.atomicRadius },
+    ionizationEnergy: { label: 'Ionization Energy', unit: 'kJ/mol', getValue: (e) => e.ionizationEnergy },
+};
+
+const COLOR_MODES: { mode: PeriodicTableColorMode; label: string }[] = [
+    { mode: 'category', label: 'Category' },
+    { mode: 'electronegativity', label: 'Electronegativity' },
+    { mode: 'atomicRadius', label: 'Atomic Radius' },
+    { mode: 'ionizationEnergy', label: 'Ionization Energy' },
+];
+
+// Blue (low) -> amber/red (high), matching the temperature-slider color idiom used elsewhere in the UI.
+function trendColor(t: number): { bg: string; border: string } {
+    const hue = 220 - t * 220; // 220 (blue) -> 0 (red)
+    return {
+        bg: `hsla(${hue}, 85%, 55%, ${0.25 + t * 0.35})`,
+        border: `hsla(${hue}, 85%, 60%, 0.9)`,
+    };
+}
 
 const ROW_Col_MAP: Record<number, [number, number]> = {
     // Period 1
@@ -29,9 +54,16 @@ const ROW_Col_MAP: Record<number, [number, number]> = {
 };
 
 export function PeriodicTable() {
-    const { selectedElement, hoveredElement, isTableExpanded } = useGameStore();
-    const { setSelectedElement, setHoveredElement, setTableExpanded } = useGameStore.getState().actions;
+    const { selectedElement, hoveredElement, isTableExpanded, periodicTableColorMode } = useGameStore();
+    const { setSelectedElement, setHoveredElement, setTableExpanded, setPeriodicTableColorMode } = useGameStore.getState().actions;
     const { playSound } = useAudio();
+
+    const trendRange = useMemo(() => {
+        if (periodicTableColorMode === 'category') return null;
+        const { getValue } = TREND_CONFIG[periodicTableColorMode];
+        const values = Object.values(ELEMENTS).map(getValue).filter((v): v is number => v !== undefined);
+        return { min: Math.min(...values), max: Math.max(...values) };
+    }, [periodicTableColorMode]);
 
     if (!isTableExpanded) {
         return (
@@ -63,6 +95,34 @@ export function PeriodicTable() {
                 </button>
             </div>
 
+            <div className="flex items-center justify-between w-full px-2 mb-4 gap-4">
+                <div className="flex gap-1.5">
+                    {COLOR_MODES.map(({ mode, label }) => (
+                        <button
+                            key={mode}
+                            onClick={() => { playSound('ui_click', { volume: 0.25 }); setPeriodicTableColorMode(mode); }}
+                            className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all border ${periodicTableColorMode === mode
+                                ? 'bg-blue-600/60 text-white border-blue-400'
+                                : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+
+                {periodicTableColorMode !== 'category' && trendRange && (
+                    <div className="flex items-center gap-3 text-[9px] font-mono text-slate-400 uppercase tracking-wider">
+                        <span>{trendRange.min.toLocaleString()}</span>
+                        <div className="w-32 h-2 rounded-full overflow-hidden border border-white/10" style={{
+                            background: 'linear-gradient(to right, hsl(220,85%,55%), hsl(110,85%,55%), hsl(0,85%,55%))'
+                        }} />
+                        <span>{trendRange.max.toLocaleString()}</span>
+                        <span className="text-slate-500 normal-case">({TREND_CONFIG[periodicTableColorMode].unit})</span>
+                    </div>
+                )}
+            </div>
+
             <div className="grid gap-1.5 min-w-[900px] select-none p-2" style={{
                 gridTemplateColumns: 'repeat(18, minmax(2.8rem, 1fr))',
                 gridTemplateRows: 'repeat(10, minmax(2.8rem, 1fr))'
@@ -75,28 +135,50 @@ export function PeriodicTable() {
                     const isSelected = selectedElement.symbol === elem.symbol;
                     const isHovered = hoveredElement?.symbol === elem.symbol;
 
-                    // Robust color parsing (some elements might have empty or non-hex cpkColor)
-                    let r = 100, g = 116, b = 139; // Default slate-500 fallback
+                    let defaultBg: string, hoverBg: string, selectedBg: string, borderColor: string, hoverBorderColor: string;
+                    let noData = false;
 
-                    if (elem.cpkColor && elem.cpkColor.startsWith('#') && elem.cpkColor.length === 7) {
-                        const baseRgb = elem.cpkColor.substring(1);
-                        r = parseInt(baseRgb.substring(0, 2), 16) || r;
-                        g = parseInt(baseRgb.substring(2, 4), 16) || g;
-                        b = parseInt(baseRgb.substring(4, 6), 16) || b;
-                    } else if (elem.cpkColor === 'white' || elem.cpkColor === '#fff') {
-                        r = 255; g = 255; b = 255;
-                    } else if (elem.cpkColor === 'gray') {
-                        r = 128; g = 128; b = 128;
-                    } else if (elem.cpkColor === 'darkgray') {
-                        r = 169; g = 169; b = 169;
+                    if (periodicTableColorMode !== 'category' && trendRange) {
+                        const value = TREND_CONFIG[periodicTableColorMode].getValue(elem);
+                        if (value === undefined) {
+                            noData = true;
+                            defaultBg = 'rgba(100, 116, 139, 0.05)';
+                            hoverBg = 'rgba(100, 116, 139, 0.15)';
+                            selectedBg = 'rgba(100, 116, 139, 0.3)';
+                            borderColor = 'rgba(100, 116, 139, 0.2)';
+                            hoverBorderColor = 'rgba(100, 116, 139, 0.5)';
+                        } else {
+                            const t = trendRange.max === trendRange.min ? 0.5 : (value - trendRange.min) / (trendRange.max - trendRange.min);
+                            const { bg, border } = trendColor(t);
+                            defaultBg = bg;
+                            hoverBg = border.replace('0.9', '0.5');
+                            selectedBg = border;
+                            borderColor = border;
+                            hoverBorderColor = border;
+                        }
+                    } else {
+                        // Robust color parsing (some elements might have empty or non-hex cpkColor)
+                        let r = 100, g = 116, b = 139; // Default slate-500 fallback
+
+                        if (elem.cpkColor && elem.cpkColor.startsWith('#') && elem.cpkColor.length === 7) {
+                            const baseRgb = elem.cpkColor.substring(1);
+                            r = parseInt(baseRgb.substring(0, 2), 16) || r;
+                            g = parseInt(baseRgb.substring(2, 4), 16) || g;
+                            b = parseInt(baseRgb.substring(4, 6), 16) || b;
+                        } else if (elem.cpkColor === 'white' || elem.cpkColor === '#fff') {
+                            r = 255; g = 255; b = 255;
+                        } else if (elem.cpkColor === 'gray') {
+                            r = 128; g = 128; b = 128;
+                        } else if (elem.cpkColor === 'darkgray') {
+                            r = 169; g = 169; b = 169;
+                        }
+
+                        defaultBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
+                        hoverBg = `rgba(${r}, ${g}, ${b}, 0.4)`;
+                        selectedBg = elem.cpkColor || `rgb(${r}, ${g}, ${b})`;
+                        borderColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+                        hoverBorderColor = `rgba(${r}, ${g}, ${b}, 1)`;
                     }
-
-                    const defaultBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
-                    const hoverBg = `rgba(${r}, ${g}, ${b}, 0.4)`;
-                    const selectedBg = elem.cpkColor || `rgb(${r}, ${g}, ${b})`;
-
-                    const borderColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
-                    const hoverBorderColor = `rgba(${r}, ${g}, ${b}, 1)`;
 
                     return (
                         <button
@@ -109,6 +191,7 @@ export function PeriodicTable() {
                                 ${isSelected ? 'z-20 scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]' : ''}
                                 ${isHovered && !isSelected ? 'z-20 scale-110 shadow-lg' : ''}
                                 ${!isSelected && !isHovered ? 'hover:brightness-125' : ''}
+                                ${noData ? 'border-dashed opacity-60' : ''}
                             `}
                             style={{
                                 gridRow: row,
@@ -118,7 +201,11 @@ export function PeriodicTable() {
                                 color: isSelected ? '#000000' : '#ffffff',
                                 textShadow: isSelected ? 'none' : '0 1px 2px rgba(0,0,0,0.8)'
                             }}
-                            title={elem.name}
+                            title={
+                                periodicTableColorMode === 'category'
+                                    ? elem.name
+                                    : `${elem.name} — ${TREND_CONFIG[periodicTableColorMode].label}: ${noData ? 'no data' : `${TREND_CONFIG[periodicTableColorMode].getValue(elem)} ${TREND_CONFIG[periodicTableColorMode].unit}`}`
+                            }
                         >
                             <span className="text-[8px] absolute top-1 left-1.5 opacity-80 font-mono">{elem.atomicNumber}</span>
                             <span className="text-sm font-bold mt-1 tracking-wide">{elem.symbol}</span>

@@ -3,6 +3,18 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
+// Diamond cubic structure coordinates (fractional)
+const basis = [
+    [0, 0, 0],
+    [0, 0.5, 0.5],
+    [0.5, 0, 0.5],
+    [0.5, 0.5, 0],
+    [0.25, 0.25, 0.25],
+    [0.25, 0.75, 0.75],
+    [0.75, 0.25, 0.75],
+    [0.75, 0.75, 0.25]
+];
+
 export function DiamondLattice() {
     const { temperature } = useGameStore();
     const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -10,18 +22,6 @@ export function DiamondLattice() {
 
     const gridSize = 3; // 3x3x3 unit cells
     const a = 2.0; // Lattice constant
-
-    // Diamond cubic structure coordinates (fractional)
-    const basis = [
-        [0, 0, 0],
-        [0, 0.5, 0.5],
-        [0.5, 0, 0.5],
-        [0.5, 0.5, 0],
-        [0.25, 0.25, 0.25],
-        [0.25, 0.75, 0.75],
-        [0.75, 0.25, 0.75],
-        [0.75, 0.75, 0.25]
-    ];
 
     const { atoms, bonds } = useMemo(() => {
         const atomPositions: THREE.Vector3[] = [];
@@ -88,7 +88,7 @@ export function DiamondLattice() {
     return (
         <group ref={groupRef}>
             {/* Carbon Atoms */}
-            <instancedMesh ref={meshRef} args={[null as any, null as any, atoms.length]}>
+            <instancedMesh ref={meshRef} args={[undefined, undefined, atoms.length]}>
                 <sphereGeometry args={[0.3, 16, 16]} />
                 <meshPhysicalMaterial
                     color="#444444"

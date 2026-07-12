@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { generateCrystalGrid } from '../../utils/lattice';
 import { useGameStore } from '../../store/useGameStore';
+import { seededRandom } from '../../utils/random';
 
 const atomVertexShader = `
 uniform float uTime;
@@ -70,10 +71,10 @@ export function CrystalLattice() {
 
     // Store random phase offsets per atom for varied vibration
     const phaseOffsets = useMemo(() => {
-        return positions.map(() => ({
-            x: Math.random() * Math.PI * 2,
-            y: Math.random() * Math.PI * 2,
-            z: Math.random() * Math.PI * 2,
+        return positions.map((_, i) => ({
+            x: seededRandom(i * 12.9898) * Math.PI * 2,
+            y: seededRandom(i * 78.233) * Math.PI * 2,
+            z: seededRandom(i * 37.719) * Math.PI * 2,
         }));
     }, [positions]);
 

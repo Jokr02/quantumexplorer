@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
+import { seededRandom } from '../../utils/random';
 
 /**
  * Quark visualization that shows individual quarks orbiting inside a highlighted nucleon.
@@ -73,11 +74,11 @@ function Quark({ position, type, colorCharge, orbitRadius, orbitSpeed, orbitOffs
 }
 
 
+// Color charges for the quarks (RGB): Red, Green, Blue
+const quarkColors = ['#ff3333', '#33ff33', '#3333ff'];
+
 export function QuarkDisplay() {
     const selectedElement = useGameStore((state) => state.selectedElement);
-
-    // Color charges for the quarks (RGB)
-    const quarkColors = ['#ff3333', '#33ff33', '#3333ff']; // Red, Green, Blue
 
     // Generate quark positions for a sample of nucleons
     const nucleonQuarks = useMemo(() => {
@@ -98,7 +99,7 @@ export function QuarkDisplay() {
             const theta = Math.PI * (1 + Math.sqrt(5)) * i;
             const radius = 0.5 * Math.pow(total, 1 / 3) * 0.6;
 
-            const r = radius * 0.8 + Math.random() * 0.2;
+            const r = radius * 0.8 + seededRandom(i * 12.9898) * 0.2;
             const x = r * Math.sin(phi) * Math.cos(theta);
             const y = r * Math.sin(phi) * Math.sin(theta);
             const z = r * Math.cos(phi);
@@ -149,7 +150,7 @@ export function QuarkDisplay() {
                             outlineWidth={0.01}
                             outlineColor="#000000"
                         >
-                            {nucleon.type === 'proton' ? 'p⁺ (uud)' : 'n⁰ (udd)'}
+                            {nucleon.type === 'proton' ? 'p+ (uud)' : 'n0 (udd)'}
                         </Text>
                     </Billboard>
                 </group>

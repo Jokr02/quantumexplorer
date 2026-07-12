@@ -128,7 +128,7 @@ export function GraphiteLattice() {
     return (
         <group ref={groupRef}>
             {/* Carbon Atoms (Graphite style - darker, metallic) */}
-            <instancedMesh ref={meshRef} args={[null as any, null as any, atoms.length]}>
+            <instancedMesh ref={meshRef} args={[undefined, undefined, atoms.length]}>
                 <sphereGeometry args={[0.3, 16, 16]} />
                 <meshStandardMaterial
                     color="#1a1a1a"

@@ -69,7 +69,7 @@ export function ComplexMolecule({ preset }: ComplexMoleculeProps) {
             {Object.entries(atomGroups).map(([type, group]) => (
                 <instancedMesh
                     key={type}
-                    ref={(el) => (meshRefs.current[type] = el)}
+                    ref={(el) => { meshRefs.current[type] = el; }}
                     args={[undefined, undefined, group.positions.length]}
                 >
                     <sphereGeometry args={[1, 32, 32]} />

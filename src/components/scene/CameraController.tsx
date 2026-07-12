@@ -43,7 +43,7 @@ export function CameraController() {
             targetZ = THREE.MathUtils.mapLinear(newScale, 0.5, 2, 5.0, 15);
         }
 
-        camera.position.setZ(targetZ); // eslint-disable-line react-hooks/immutability
+        camera.position.setZ(targetZ);
         camera.lookAt(0, 0, 0);
     });
 

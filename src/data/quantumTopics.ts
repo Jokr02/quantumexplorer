@@ -3,11 +3,9 @@ export interface Formula {
     latex: string;
 }
 
-export interface ExhibitShortcut {
-    label: string;
-    actionType: 'load_molecule' | 'set_material';
-    payload: any;
-}
+export type ExhibitShortcut =
+    | { label: string; actionType: 'load_molecule'; payload: string }
+    | { label: string; actionType: 'set_material'; payload: { elementRef: string; material: 'solid' | 'liquid' | 'gas' } };
 
 export interface QuantumTopic {
     id: string;
@@ -18,6 +16,13 @@ export interface QuantumTopic {
     funFact: string;
     category: 'Atomic' | 'Molecular' | 'Subatomic' | 'Quantum' | 'Nuclear';
     exhibits?: ExhibitShortcut[];
+}
+
+export interface QuizQuestion {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
 }
 
 export const QUANTUM_TOPICS: QuantumTopic[] = [
@@ -506,3 +511,419 @@ export const QUANTUM_TOPICS: QuantumTopic[] = [
         funFact: 'Richard Feynman said that the double-slit experiment contains the ONLY mystery of quantum mechanics.'
     }
 ];
+
+// Two knowledge-check questions per topic, keyed by topic id. Turns passive reading into active recall.
+export const QUIZ_BANK: Record<string, QuizQuestion[]> = {
+    'atomic-structure': [
+        {
+            question: 'What determines which element an atom is?',
+            options: ['Number of neutrons', 'Number of protons', 'Number of electrons', 'Atomic mass'],
+            correctIndex: 1,
+            explanation: 'The atomic number — the count of protons — defines the element. Change it, and you get a different element entirely.'
+        },
+        {
+            question: "Roughly how much of an atom's volume is occupied by mass versus empty space?",
+            options: ['Mostly solid, like a pool ball', 'Overwhelmingly empty space', 'Exactly half and half', 'It depends on temperature'],
+            correctIndex: 1,
+            explanation: "If a hydrogen nucleus were a basketball, its electron would orbit about 3 km away — atoms are almost entirely empty space."
+        }
+    ],
+    'electron-orbitals': [
+        {
+            question: 'What shape is an s orbital?',
+            options: ['Dumbbell-shaped', 'Spherical', 'Cloverleaf-shaped', 'Donut-shaped'],
+            correctIndex: 1,
+            explanation: 's orbitals are spherical probability clouds; p orbitals are dumbbell-shaped and d orbitals are cloverleaf-shaped.'
+        },
+        {
+            question: 'Per the Pauli Exclusion Principle, how many electrons can occupy one orbital?',
+            options: ['1', '2 (opposite spins)', '4', '8'],
+            correctIndex: 1,
+            explanation: 'No two electrons in an atom can share the same set of quantum numbers, capping each orbital at 2 electrons with opposite spin.'
+        }
+    ],
+    'periodic-table': [
+        {
+            question: 'Why do elements in the same column (group) share similar chemical properties?',
+            options: ['They have the same atomic mass', 'They have the same number of outer-shell electrons', 'They were discovered the same year', 'They have the same number of neutrons'],
+            correctIndex: 1,
+            explanation: 'Outer-shell ("valence") electron count drives chemical behavior, and elements in a group share that count.'
+        },
+        {
+            question: 'How does electronegativity generally trend across the periodic table?',
+            options: ['Increases left→right and bottom→top', 'Increases left→right, decreases bottom→top', 'Decreases left→right, increases bottom→top', 'It has no consistent pattern'],
+            correctIndex: 0,
+            explanation: 'Electronegativity rises toward the top-right of the table — fluorine, in the top-right corner, is the most electronegative element.'
+        }
+    ],
+    isotopes: [
+        {
+            question: 'What differs between isotopes of the same element?',
+            options: ['Number of protons', 'Number of neutrons', 'Number of electrons in a neutral atom', 'Nuclear charge'],
+            correctIndex: 1,
+            explanation: 'Isotopes share the same proton count (same element) but differ in neutron count, giving different masses.'
+        },
+        {
+            question: "What does Carbon-14 dating actually measure?",
+            options: ['The ratio of remaining Carbon-14 to Carbon-12', "The fossil's color", 'The number of protons lost', "The rock layer's depth"],
+            correctIndex: 0,
+            explanation: 'Carbon-14 decays at a known rate (half-life 5,730 years), so the remaining ratio reveals time since death.'
+        }
+    ],
+    'chemical-bonding': [
+        {
+            question: 'In an ionic bond like NaCl, what happens to electrons?',
+            options: ['They are shared equally', 'They transfer from one atom to another', 'They are removed from both atoms', 'Nothing happens to them'],
+            correctIndex: 1,
+            explanation: 'Sodium donates its outer electron to chlorine, creating Na⁺ and Cl⁻ ions that attract each other.'
+        },
+        {
+            question: 'Why do metals conduct electricity so well?',
+            options: ['A rigid lattice with no free electrons', 'A "sea" of delocalized electrons that flow freely', 'Ionic bonds between metal atoms', 'Covalent sharing of protons'],
+            correctIndex: 1,
+            explanation: 'Metallic bonding shares a sea of delocalized electrons across the whole structure, letting current flow easily.'
+        }
+    ],
+    'states-of-matter': [
+        {
+            question: 'What primarily determines whether a substance is solid, liquid, or gas?',
+            options: ['Its color', 'The balance between kinetic energy and intermolecular forces', 'Its atomic number', 'Its electric charge'],
+            correctIndex: 1,
+            explanation: 'When kinetic energy overcomes intermolecular forces, particles break free of fixed positions — solid → liquid → gas.'
+        },
+        {
+            question: 'What state forms when atoms merge into a single quantum state near absolute zero?',
+            options: ['Plasma', 'Bose-Einstein Condensate', 'Supercritical fluid', 'Amorphous solid'],
+            correctIndex: 1,
+            explanation: 'A Bose-Einstein Condensate forms when atoms lose enough energy to collapse into one shared quantum ground state.'
+        }
+    ],
+    'molecular-geometry': [
+        {
+            question: 'Why is a water molecule bent rather than linear?',
+            options: [
+                "Oxygen's two lone electron pairs push the hydrogens closer together",
+                'Hydrogen atoms repel each other strongly',
+                'It formed under high pressure',
+                'Water has no fixed shape'
+            ],
+            correctIndex: 0,
+            explanation: "Oxygen's lone pairs take up space around the central atom, bending the H-O-H angle to about 104.5°."
+        },
+        {
+            question: 'What theory predicts molecular shapes from electron-pair repulsion?',
+            options: ['Quantum Field Theory', 'VSEPR Theory', 'The Standard Model', 'Bohr Theory'],
+            correctIndex: 1,
+            explanation: 'VSEPR (Valence Shell Electron Pair Repulsion) says electron pairs arrange to be as far apart as possible.'
+        }
+    ],
+    quarks: [
+        {
+            question: 'What quarks make up a proton?',
+            options: ['uud', 'udd', 'uuu', 'ddd'],
+            correctIndex: 0,
+            explanation: 'Two Up quarks (+2/3 each) and one Down quark (−1/3) sum to a charge of +1 — a proton.'
+        },
+        {
+            question: "What is 'Color Confinement'?",
+            options: [
+                'Quarks change color when heated',
+                'Quarks can never be observed in isolation',
+                'Only red quarks exist in nature',
+                'Quarks lose charge over time'
+            ],
+            correctIndex: 1,
+            explanation: 'Pulling a quark away creates enough energy to spawn a new quark-antiquark pair before it can escape alone.'
+        }
+    ],
+    'strong-force': [
+        {
+            question: 'What particle carries the Strong Nuclear Force?',
+            options: ['Photon', 'Gluon', 'W boson', 'Graviton'],
+            correctIndex: 1,
+            explanation: 'Gluons mediate the strong force between quarks, similar to how photons mediate electromagnetism.'
+        },
+        {
+            question: "What is 'Asymptotic Freedom'?",
+            options: [
+                'Quarks move almost freely at short range but are bound tightly at long range',
+                'Quarks are always completely free',
+                'The strong force weakens with mass',
+                'Gluons are massless at every distance'
+            ],
+            correctIndex: 0,
+            explanation: 'Unlike gravity or electromagnetism, the strong force gets stronger with distance — like stretching a rubber band.'
+        }
+    ],
+    'weak-force': [
+        {
+            question: 'What can the Weak Force uniquely do that other forces cannot?',
+            options: ['Change the flavor of quarks', 'Attract opposite electric charges', 'Hold the nucleus together', 'Create gravity'],
+            correctIndex: 0,
+            explanation: 'In beta decay, the Weak Force converts a down quark into an up quark (or vice versa), transmuting the nucleus.'
+        },
+        {
+            question: 'What did the 1957 Wu experiment reveal about the Weak Force?',
+            options: ['It has infinite range', 'It violates parity (mirror) symmetry', "It doesn't actually exist", "It's stronger than the strong force"],
+            correctIndex: 1,
+            explanation: 'Chien-Shiung Wu showed the Weak Force behaves differently in a mirror-reflected universe — a huge surprise in 1957.'
+        }
+    ],
+    'standard-model': [
+        {
+            question: 'Which particle gives mass to the W and Z bosons?',
+            options: ['The photon', 'The Higgs boson', 'The gluon', 'The graviton'],
+            correctIndex: 1,
+            explanation: 'The Higgs mechanism, via the Higgs field, is what gives the W and Z bosons (and other particles) their mass.'
+        },
+        {
+            question: 'Which fundamental force is NOT included in the Standard Model?',
+            options: ['Electromagnetism', 'Strong force', 'Weak force', 'Gravity'],
+            correctIndex: 3,
+            explanation: 'Gravity is described separately by General Relativity — unifying it with quantum mechanics remains unsolved.'
+        }
+    ],
+    antimatter: [
+        {
+            question: 'Who first predicted the existence of antimatter?',
+            options: ['Albert Einstein', 'Paul Dirac', 'Niels Bohr', 'Werner Heisenberg'],
+            correctIndex: 1,
+            explanation: "Dirac's 1928 equation had a second solution — a positively charged electron — leading to the discovery of the positron in 1932."
+        },
+        {
+            question: 'What happens when a particle meets its antiparticle?',
+            options: ['They merge into a heavier particle', 'They annihilate into energy', 'They pass through each other', 'They form a black hole'],
+            correctIndex: 1,
+            explanation: 'All their mass converts to energy via E=mc² — a small amount of antimatter releases an enormous amount of energy.'
+        }
+    ],
+    'nuclear-forces': [
+        {
+            question: 'Which nucleus has the highest binding energy per nucleon?',
+            options: ['Hydrogen-1', 'Iron-56', 'Uranium-235', 'Helium-4'],
+            correctIndex: 1,
+            explanation: 'Iron-56 sits at the peak of the binding-energy curve — fusing lighter elements or splitting heavier ones both release energy relative to it.'
+        },
+        {
+            question: 'Elements lighter than iron release energy through which process?',
+            options: ['Fission', 'Fusion', 'Radioactive decay only', 'Electron capture'],
+            correctIndex: 1,
+            explanation: 'Fusing light nuclei together (as stars do with hydrogen) releases energy because the products sit lower on the binding-energy curve.'
+        }
+    ],
+    'wave-particle-duality': [
+        {
+            question: 'What happens in the double-slit experiment when you detect which slit an electron used?',
+            options: ['Nothing changes', 'The interference pattern disappears', 'The electron disappears', 'The electron speeds up'],
+            correctIndex: 1,
+            explanation: 'Measuring which path collapses the wave function — the electron then behaves like a classical particle, and the interference vanishes.'
+        },
+        {
+            question: 'Who proposed that all matter has an associated wavelength?',
+            options: ['Louis de Broglie', 'Max Planck', 'Erwin Schrödinger', 'Niels Bohr'],
+            correctIndex: 0,
+            explanation: "De Broglie's 1924 hypothesis — that matter has wave properties — was later confirmed for electrons, atoms, and even large molecules."
+        }
+    ],
+    'uncertainty-principle': [
+        {
+            question: "What does Heisenberg's Uncertainty Principle say about position and momentum?",
+            options: [
+                'Both can be measured precisely with a good enough instrument',
+                'The more precisely one is known, the less precisely the other can be known',
+                'They are unrelated quantities',
+                'It only applies to large objects'
+            ],
+            correctIndex: 1,
+            explanation: "This isn't a measurement limitation — it's a fundamental property of quantum systems, not a flaw in our instruments."
+        },
+        {
+            question: "What lets 'virtual particles' briefly pop into existence, borrowing energy from the vacuum?",
+            options: ['The Pauli Exclusion Principle', 'The Energy-Time Uncertainty Relation', "Newton's Third Law", 'Conservation of charge'],
+            correctIndex: 1,
+            explanation: 'ΔE·Δt ≥ ħ/2 permits brief energy "loans" from the vacuum, long enough for virtual particles to flicker into being.'
+        }
+    ],
+    'quantum-tunneling': [
+        {
+            question: 'What natural process critically depends on quantum tunneling?',
+            options: ['Photosynthesis alone', "Nuclear fusion in the Sun's core", 'Radio wave transmission', 'Gravity'],
+            correctIndex: 1,
+            explanation: "Protons in the Sun's core don't have enough classical energy to fuse — they tunnel through the Coulomb barrier instead."
+        },
+        {
+            question: 'How does tunneling probability change as a barrier gets wider?',
+            options: ['It increases', 'It decreases exponentially', "It's unaffected by width", 'It only depends on temperature'],
+            correctIndex: 1,
+            explanation: 'Tunneling probability falls off exponentially with barrier width — why macroscopic objects never tunnel through walls.'
+        }
+    ],
+    spin: [
+        {
+            question: 'Is an electron literally spinning like a tiny top?',
+            options: ['Yes, it physically rotates', 'No — spin is a quantum property with no classical analogue', 'Only at high energies', 'Only inside strong magnetic fields'],
+            correctIndex: 1,
+            explanation: "If an electron were truly spinning at its size, its surface would need to move faster than light — spin is purely quantum."
+        },
+        {
+            question: 'Which medical imaging technique relies directly on quantum spin?',
+            options: ['X-ray', 'MRI', 'Ultrasound', 'CT scan'],
+            correctIndex: 1,
+            explanation: "MRI flips the spins of hydrogen nuclei with radio pulses and images the energy released as they relax back."
+        }
+    ],
+    'hadron-colliders': [
+        {
+            question: 'Approximately how fast do protons travel inside the LHC?',
+            options: ['Half the speed of light', '99.9999991% the speed of light', 'The speed of sound', '10% the speed of light'],
+            correctIndex: 1,
+            explanation: 'At that speed, a proton laps the 27 km ring over 11,000 times per second.'
+        },
+        {
+            question: 'What conditions do LHC collisions recreate?',
+            options: ['Conditions deep inside the Earth', 'Conditions just after the Big Bang', 'Ordinary room-temperature chemistry', 'Standard combustion'],
+            correctIndex: 1,
+            explanation: 'The concentrated collision energy briefly recreates temperatures and densities last seen a trillionth of a second after the Big Bang.'
+        }
+    ],
+    'higgs-field': [
+        {
+            question: 'What gives particles like the top quark their mass, per the Higgs mechanism?',
+            options: ['Interaction with the Higgs field', 'Their electric charge', 'Their spin', 'Gravity alone'],
+            correctIndex: 0,
+            explanation: 'Particles that interact strongly with the ever-present Higgs field are heavy; those that barely interact (like photons) stay massless.'
+        },
+        {
+            question: 'In what year was the Higgs boson experimentally discovered?',
+            options: ['1964', '1983', '2012', '1998'],
+            correctIndex: 2,
+            explanation: 'Predicted in 1964, it took until 2012 and the construction of the LHC to finally confirm the Higgs boson.'
+        }
+    ],
+    'quark-gluon-plasma': [
+        {
+            question: "What happens to quarks at temperatures around 2 trillion °C?",
+            options: ['They freeze in place', 'They break free of confinement, forming a plasma', 'They turn into photons', 'They vanish entirely'],
+            correctIndex: 1,
+            explanation: 'Above this critical temperature, quarks and gluons are no longer confined inside protons and neutrons.'
+        },
+        {
+            question: 'How does Quark-Gluon Plasma behave, surprisingly?',
+            options: ['Like a high-viscosity gas', 'Like a nearly perfect liquid with almost zero viscosity', 'Like a rigid solid', "It doesn't flow at all"],
+            correctIndex: 1,
+            explanation: 'Physicists expected a gas-like state, but QGP flows almost frictionlessly — among the least viscous fluids ever observed.'
+        }
+    ],
+    neutrinos: [
+        {
+            question: 'What surprising behavior do neutrinos exhibit as they travel?',
+            options: ['They change speed randomly', 'They oscillate between different flavors', 'They split into two neutrinos', 'They emit visible light'],
+            correctIndex: 1,
+            explanation: "Neutrino oscillation proved neutrinos have mass — something the original Standard Model didn't predict."
+        },
+        {
+            question: 'Roughly how many solar neutrinos pass through one square centimeter of your skin every second?',
+            options: ['A few hundred', 'About 65 billion', 'Essentially zero', 'Around 1 million'],
+            correctIndex: 1,
+            explanation: "Neutrinos interact so weakly that ~65 billion pass through you every second, day and night, without you noticing."
+        }
+    ],
+    'nuclear-reactions': [
+        {
+            question: 'How does the Sun primarily produce its energy?',
+            options: ['Fission of uranium', 'Fusion of hydrogen into helium', 'Burning hydrogen gas chemically', 'Radioactive decay of iron'],
+            correctIndex: 1,
+            explanation: 'The pp-chain fuses four protons into helium-4, converting mass to energy via E=mc² at a staggering rate.'
+        },
+        {
+            question: 'What happens when a neutron strikes a Uranium-235 nucleus?',
+            options: ['It fuses with the uranium atom', 'The nucleus splits into smaller nuclei plus extra neutrons', 'It captures an electron', 'It emits only light'],
+            correctIndex: 1,
+            explanation: 'The released neutrons can strike other U-235 nuclei, triggering a self-sustaining chain reaction.'
+        }
+    ],
+    'quantum-entanglement': [
+        {
+            question: 'What did Einstein famously call quantum entanglement?',
+            options: ['A beautiful mystery', 'Spooky action at a distance', 'Impossible physics', 'A mathematical error'],
+            correctIndex: 1,
+            explanation: 'Einstein argued entanglement implied hidden variables; Bell\'s theorem later showed no such local hidden-variable theory can work.'
+        },
+        {
+            question: 'Does entanglement allow faster-than-light communication?',
+            options: ['Yes, information travels instantly', 'No — you still need classical communication to compare results', 'Only over short distances', 'Only with photons'],
+            correctIndex: 1,
+            explanation: "The correlation is instant, but the outcomes look random until compared via an ordinary (light-speed-limited) channel."
+        }
+    ],
+    'quantum-field-theory': [
+        {
+            question: "In Quantum Field Theory, what is a 'particle' fundamentally?",
+            options: ['A tiny solid ball', 'A localized excitation (ripple) in a quantum field', 'An empty point in space', 'A wave in the air'],
+            correctIndex: 1,
+            explanation: 'An electron is a ripple in the electron field; a photon is a ripple in the electromagnetic field — fields are what\'s truly fundamental.'
+        },
+        {
+            question: 'What breakthrough tamed the infinite results in early QFT calculations?',
+            options: ['Renormalization', 'Quantization', 'Superposition', 'Entanglement'],
+            correctIndex: 0,
+            explanation: 'Feynman, Schwinger, and Tomonaga showed how to systematically absorb infinities into redefinitions of mass and charge.'
+        }
+    ],
+    'neutron-stars': [
+        {
+            question: 'What do protons and electrons get squeezed into when a neutron star forms?',
+            options: ['Quarks', 'Neutrons', 'Photons', 'Gluons'],
+            correctIndex: 1,
+            explanation: 'Under extreme gravity, protons and electrons fuse via the weak force (p + e⁻ → n + ν) into a giant ball of neutrons.'
+        },
+        {
+            question: 'What 2017 event (GW170817) confirmed neutron star mergers forge heavy elements like gold?',
+            options: ['The Higgs boson discovery', 'A gravitational wave detection from a neutron star merger', 'The discovery of the top quark', 'The first exoplanet detection'],
+            correctIndex: 1,
+            explanation: 'LIGO/Virgo detected gravitational waves from the merger, later confirmed across the electromagnetic spectrum too.'
+        }
+    ],
+    'gold-foil-experiment': [
+        {
+            question: "What surprising result did Rutherford's team observe firing alpha particles at gold foil?",
+            options: ['All particles passed straight through', 'A few particles bounced almost straight back', 'All particles were absorbed', 'The foil melted instantly'],
+            correctIndex: 1,
+            explanation: 'Rutherford compared it to firing a shell at tissue paper and having it bounce back — utterly unexpected under the old "plum pudding" model.'
+        },
+        {
+            question: "What did the gold foil experiment reveal about atomic structure?",
+            options: ['Atoms are solid all the way through', 'Atoms have a tiny, dense, positively charged nucleus', 'Electrons are heavier than protons', 'Atoms carry no charge at all'],
+            correctIndex: 1,
+            explanation: 'The rare sharp deflections meant nearly all the mass and positive charge is concentrated in a nucleus 100,000× smaller than the atom.'
+        }
+    ],
+    'double-slit-experiment': [
+        {
+            question: 'What pattern do unobserved electrons build up when fired one at a time through two slits?',
+            options: ['A single line', 'An interference pattern, as if each passed through both slits', 'A random splatter', 'No pattern at all'],
+            correctIndex: 1,
+            explanation: 'Each electron interferes with itself as a wave — until you try to observe which slit it took.'
+        },
+        {
+            question: 'According to Feynman, the double-slit experiment contains the only mystery of what field?',
+            options: ['Chemistry', 'Quantum mechanics', 'Classical mechanics', 'Thermodynamics'],
+            correctIndex: 1,
+            explanation: 'Feynman considered it the essential puzzle that captures everything strange about quantum behavior.'
+        }
+    ],
+    'schrodingers-cat': [
+        {
+            question: "What is the cat's state, per quantum mechanics, before the box is opened?",
+            options: ['Definitely alive', 'Definitely dead', 'Simultaneously alive and dead (superposition)', 'The cat is not in the box'],
+            correctIndex: 2,
+            explanation: 'Since the triggering atom is in superposition, the entire system — including the cat — is described as being in superposition too.'
+        },
+        {
+            question: 'Why did Schrödinger propose this thought experiment?',
+            options: ['To prove quantum mechanics was correct', 'To show how absurd quantum mechanics seemed when scaled up to everyday objects', 'To design a real, practical experiment', 'To study cat behavior'],
+            correctIndex: 1,
+            explanation: 'It was meant as a critique — highlighting how strange superposition sounds once applied beyond the subatomic scale.'
+        }
+    ]
+};

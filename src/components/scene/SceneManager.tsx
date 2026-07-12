@@ -9,6 +9,7 @@ import { LiquidVolume } from '../molecular/LiquidVolume';
 import { GasVolume } from '../molecular/GasVolume';
 import { Nucleus } from '../subatomic/Nucleus';
 import { GluonField } from '../subatomic/GluonField';
+import { QuarkDisplay } from '../subatomic/QuarkDisplay';
 import { AmbientDust } from './AmbientDust';
 import { LaboratoryBox } from './LaboratoryBox';
 import { WaterMolecule } from '../molecular/WaterMolecule';
@@ -17,11 +18,12 @@ import { DiamondLattice } from '../molecular/DiamondLattice';
 import { GraphiteLattice } from '../molecular/GraphiteLattice';
 import { ComplexMolecule } from '../molecular/ComplexMolecule';
 import { getMoleculeForElement } from '../../data/molecules';
+import { toSceneSafeText } from '../../utils/text';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 export function SceneManager() {
-    const { currentScale, materialType, scaleLevel, atomicViewMode, showSpecialMolecule, activeMoleculeId } = useGameStore();
+    const { currentScale, materialType, scaleLevel, atomicViewMode, showSpecialMolecule, activeMoleculeId, showQuarks } = useGameStore();
     const { showInfoPopup, setHoveredObject, setTargetScale } = useGameStore.getState().actions;
     const selectedElement = useGameStore((state) => state.selectedElement);
 
@@ -140,6 +142,10 @@ export function SceneManager() {
             case 'gold': return <CrystalLattice />;
             case 'caffeine':
             case 'buckyball':
+            case 'methane':
+            case 'ammonia':
+            case 'carbon_dioxide':
+            case 'benzene':
                 return <ComplexMolecule preset={specialMolecule} />;
             default: return null;
         }
@@ -189,7 +195,7 @@ export function SceneManager() {
 
                 <Text position={[0, 7.5, 0]} fontSize={0.5} color="#333333" anchorX="center" anchorY="middle">
                     {specialMolecule ?
-                        `Compound View: ${specialMolecule.name} (${specialMolecule.formula})` :
+                        `Compound View: ${specialMolecule.name} (${toSceneSafeText(specialMolecule.formula)})` :
                         (materialType === 'solid' ? "Molecular Structure (Solid Crystal)" :
                             materialType === 'liquid' ? "Molecular Structure (Liquid State)" :
                                 "Molecular Structure (Gas State)")
@@ -205,6 +211,7 @@ export function SceneManager() {
             {/* Subatomic Layer - Clickable gluon field only in subatomic view */}
             <group ref={subatomicRef}>
                 <Nucleus />
+                {scaleLevel === 'subatomic' && showQuarks && <QuarkDisplay />}
                 {scaleLevel === 'subatomic' ? (
                     <group
                         onClick={handleSubatomicClick}
